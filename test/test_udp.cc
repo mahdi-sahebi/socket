@@ -4,6 +4,7 @@
 #include <thread>
 #include <future>
 #include <iterator>
+#include <vector>
 #include <gtest/gtest.h>
 #include "socket/udp.h"
 
@@ -12,70 +13,8 @@
 using namespace std;
 
 
-//TEST(Creation, ValidDefault)
-//{
-//  try {
-//    unique_ptr<Udp> udp = Udp::Builder().build();
-//  } catch (const exception& excp) {
-//    cout << excp.what() << endl;
-//    FAIL();
-//  }
-//}
-
-//TEST(Creation, ValidServer)
-//{
-//  try {
-//    unique_ptr<Udp> udp = Udp::Builder().setType(Socket::kServer).build();
-//  } catch (const exception& excp) {
-//    cout << excp.what() << endl;
-//    FAIL();
-//  }
-//}
-
-//TEST(Write, Zero)
-//{
-//  try {
-//    unique_ptr<Udp> udp = Udp::Builder()setType(Socket::kServer).build();
-//    const auto sentSize = udp->write({});
-//    EXPECT_EQ(sentSize, 0);
-//  } catch (const exception& excp) {
-//    cout << excp.what() << endl;
-//    FAIL();
-//  }
-//}
-
-//TEST(Write, Small)
-//{
-//  try {
-//    unique_ptr<Udp> udp = Udp::Builder().setType(Socket::kServer).build();
-//    const auto sentSize = udp->write("This is example");
-//    EXPECT_EQ(sentSize, 15);
-//  } catch (const exception& excp) {
-//    cout << excp.what() << endl;
-//    FAIL();
-//  }
-//}
-
-//TEST(Write, Large)
-//{
-//  try {
-//    unique_ptr<Udp> udp = Udp::Builder()setType(Socket::kServer).build();
-
-//    vector<char> data;
-//    for (uint32_t index = 0; index < 2400; index++) {
-//      data.push_back('g');
-//    }
-
-//    const auto sentSize = udp->write(data);
-//    EXPECT_EQ(sentSize, data.size());
-//  } catch (const exception& excp) {
-//    cout << excp.what() << endl;
-//    FAIL();
-//  }
-//}
-
 template <typename T>
-constexpr auto max(const T* const list, const uint32_t size)
+constexpr auto maxList(const T* const list, const uint32_t size)
 {
   if (0 == size) {
       throw invalid_argument("Zero length array");
@@ -91,17 +30,17 @@ constexpr auto max(const T* const list, const uint32_t size)
   return max;
 }
 
-static void fill(char* const buffer, uint32_t size, char seed)
+static void fillData(char* const buffer, uint32_t size, char seed)
 {
   for (uint32_t index = 1; index < size; index++) {
-    buffer[index] = index + seed;
+    buffer[index] = index + seed + 0x74;
   }
 }
 
-static bool verify(const char* const buffer, uint32_t size, char seed)
+static bool verifyData(const vector<char>& data, char seed)
 {
-  for (uint32_t index = 1; index < size; index++) {
-    if (buffer[index] != static_cast<char>(index + seed)) {
+  for (uint32_t index = 1; index < data.size(); index++) {
+    if (data[index] != static_cast<char>(index + seed + 0x74)) {
         return false;
     }
   }
@@ -109,37 +48,95 @@ static bool verify(const char* const buffer, uint32_t size, char seed)
   return true;
 }
 
+TEST(Creation, ValidDefault)
+{
+  try {
+    unique_ptr<Udp> udp = Udp::Builder().build();
+  } catch (const exception& excp) {
+    cout << excp.what() << endl;
+    FAIL();
+  }
+}
+
+TEST(Creation, ValidServer)
+{
+  try {
+    unique_ptr<Udp> udp = Udp::Builder().setType(Socket::kServer).build();
+  } catch (const exception& excp) {
+    cout << excp.what() << endl;
+    FAIL();
+  }
+}
+
+TEST(Write, Zero)
+{
+  try {
+    unique_ptr<Udp> udp = Udp::Builder()setType(Socket::kServer).build();
+    const auto sentSize = udp->write({});
+    EXPECT_EQ(sentSize, 0);
+  } catch (const exception& excp) {
+    cout << excp.what() << endl;
+    FAIL();
+  }
+}
+
+TEST(Write, Small)
+{
+  try {
+    unique_ptr<Udp> udp = Udp::Builder().setType(Socket::kServer).build();
+    const auto sentSize = udp->write("This is example");
+    EXPECT_EQ(sentSize, 15);
+  } catch (const exception& excp) {
+    cout << excp.what() << endl;
+    FAIL();
+  }
+}
+
+TEST(Write, Large)
+{
+  try {
+    unique_ptr<Udp> udp = Udp::Builder()setType(Socket::kServer).build();
+
+    vector<char> data;
+    for (uint32_t index = 0; index < 2400; index++) {
+      data.push_back('g');
+    }
+
+    const auto sentSize = udp->write(data);
+    EXPECT_EQ(sentSize, data.size());
+  } catch (const exception& excp) {
+    cout << excp.what() << endl;
+    FAIL();
+  }
+}
+
 TEST(UDP, Large)
 {
   constexpr uint16_t PORT = 5000;
-  constexpr uint32_t LENGTH[] = {5176, 164009, 867};
-  constexpr uint32_t LENGTH_COUNT = sizeof(LENGTH) / sizeof(*LENGTH);
+  const std::string IP = "127.0.0.1";
   constexpr uint32_t STATES = 3;
-  constexpr uint32_t MAX_LENGTH = max(LENGTH, LENGTH_COUNT);
+  const vector<uint32_t> lengths = {5176, 164009, 867};
 
   try {
     future<void> taskServer = async(launch::async, []() {
-        UdpServer udpServer = UdpServer::Builder().build();
-        udpServer.bind(PORT);
+        UdpServer udpServer = UdpServer(PORT);
+        udpServer.bind();
 
-        char buffer[MAX_LENGTH];
-        uint32_t testIndex = LENGTH_COUNT;
-
-        while (testIndex--) {
-          fill(buffer, LENGTH[testIndex], testIndex + 0x74);
-          const auto sentSize = udpServer.send(vector<char>(begin(buffer), begin(buffer) + LENGTH[testIndex]));
-          EXPECT_EQ(sentSize, LENGTH[testIndex]);
+        for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
+          vector<char> buffer(lengths[testIndex]);
+          fillData(buffer, testIndex);
+          const auto sentSize = udpServer.send(buffer);
+          EXPECT_EQ(sentSize, lengths[testIndex]);
         }
     });
 
     future<void> taskClient = async(launch::async, []() {
-        UdpClient udpClient = UdpClient::Builder().build();
+        UdpClient udpClient = UdpClient(IP, PORT);
 
-        uint32_t testIndex = LENGTH_CONT;
-        while (testIndex--) {
-          const vector<char> data = udpServer->receive(LENGTH[testIndex]);
-          EXPECT_EQ(data.size(), LENGTH[testIndex]);
-          EXPECT_TRUE(verify(data.data(), data.size()));
+        for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
+          const vector<char> data = udpServer->receive(lengths[testIndex]);
+          EXPECT_EQ(data.size(), lengths[testIndex]);
+          EXPECT_TRUE(verifyData(data));
         }
     });
 
