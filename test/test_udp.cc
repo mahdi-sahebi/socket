@@ -30,11 +30,15 @@ constexpr auto maxList(const T* const list, const uint32_t size)
   return max;
 }
 
-static void fillData(char* const buffer, uint32_t size, char seed)
+static vector<char> generateData(uint32_t size, char seed)
 {
+  vector<char> data(size);
+
   for (uint32_t index = 1; index < size; index++) {
-    buffer[index] = index + seed + 0x74;
+    data[index] = index + seed + 0x74;
   }
+
+  return data;
 }
 
 static bool verifyData(const vector<char>& data, char seed)
@@ -47,6 +51,7 @@ static bool verifyData(const vector<char>& data, char seed)
 
   return true;
 }
+
 
 TEST(Creation, ValidDefault)
 {
@@ -110,34 +115,37 @@ TEST(Write, Large)
   }
 }
 
-TEST(UDP, Large)
+TEST(large, server_send)
 {
-  constexpr uint16_t PORT = 5000;
-  const std::string IP = "127.0.0.1";
-  constexpr uint32_t STATES = 3;
-  const vector<uint32_t> lengths = {5176, 164009, 867};
+  const Port SERVER_PORT = 5000;
+  const IP SERVER_IP = "127.0.0.1";
+  const uint32_t STATES = 3;
+  const vector<uint32_t> lengths = {176, 16409, 867, 4705};
 
   try {
-    future<void> taskServer = async(launch::async, []() {
-        UdpServer udpServer = UdpServer(PORT);
-        udpServer.bind();
+    future<void> taskServer = async(launch::async, [SERVER_IP, lengths]() {
+        UdpServer server(SERVER_PORT);
+        server.open();
 
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
-          vector<char> buffer(lengths[testIndex]);
-          fillData(buffer, testIndex);
-          const auto sentSize = udpServer.send(buffer);
-          EXPECT_EQ(sentSize, lengths[testIndex]);
+          const auto [data, clientEndpoint] = server.read(lengths[testIndex]);
+          EXPECT_EQ(data.size(), lengths[testIndex]);
+          EXPECT_TRUE(verifyData(data, testIndex));
         }
+
+        server.close();
     });
 
-    future<void> taskClient = async(launch::async, []() {
-        UdpClient udpClient = UdpClient(IP, PORT);
+    future<void> taskClient = async(launch::async, [SERVER_IP, SERVER_PORT, lengths]() {
+        UdpClient client;
 
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
-          const vector<char> data = udpServer->receive(lengths[testIndex]);
-          EXPECT_EQ(data.size(), lengths[testIndex]);
-          EXPECT_TRUE(verifyData(data));
+          vector<char> buffer = generateData(lengths[testIndex], testIndex);
+          const auto sentSize = client.write(buffer, Endpoint(SERVER_IP, SERVER_PORT));
+          EXPECT_EQ(sentSize, lengths[testIndex]);
         }
+
+        client.close();
     });
 
     taskServer.get();
