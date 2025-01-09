@@ -53,31 +53,34 @@ static bool verifyData(const vector<char>& data, char seed)
 }
 
 
-TEST(Creation, ValidDefault)
+TEST(Server, ValidCreation)
 {
   try {
-    unique_ptr<Udp> udp = Udp::Builder().build();
+    UdpServer server(5000);
+  } catch (const exception& e) {
+    cout << e.what() << endl;
+    FAIL();
+  }
+}
+
+TEST(Server, InvalidCreation)
+{
+  try {
+    UdpServer server(0);
+    FAIL();
+  } catch (const UdpSocket::Exception::Port& e) {
+    SUCCEED();
   } catch (const exception& excp) {
     cout << excp.what() << endl;
     FAIL();
   }
 }
 
-TEST(Creation, ValidServer)
+TEST(Server, WriteZero)
 {
   try {
-    unique_ptr<Udp> udp = Udp::Builder().setType(Socket::kServer).build();
-  } catch (const exception& excp) {
-    cout << excp.what() << endl;
-    FAIL();
-  }
-}
-
-TEST(Write, Zero)
-{
-  try {
-    unique_ptr<Udp> udp = Udp::Builder()setType(Socket::kServer).build();
-    const auto sentSize = udp->write({});
+    UdpServer server(5000);
+    const auto sentSize = server.write({}, Endpoint("127.0.0.1", 5000));
     EXPECT_EQ(sentSize, 0);
   } catch (const exception& excp) {
     cout << excp.what() << endl;
@@ -85,29 +88,31 @@ TEST(Write, Zero)
   }
 }
 
-TEST(Write, Small)
+TEST(Server, WriteSmall)
 {
   try {
-    unique_ptr<Udp> udp = Udp::Builder().setType(Socket::kServer).build();
-    const auto sentSize = udp->write("This is example");
-    EXPECT_EQ(sentSize, 15);
+    UdpServer server(5000);
+    const string text = "This is example";
+    const vector<char> data(begin(text), end(text));
+    const auto sentSize = server.write(data, Endpoint("127.0.0.1", 5000));
+    EXPECT_EQ(sentSize, text.size());
   } catch (const exception& excp) {
     cout << excp.what() << endl;
     FAIL();
   }
 }
 
-TEST(Write, Large)
+TEST(Server, Write)
 {
   try {
-    unique_ptr<Udp> udp = Udp::Builder()setType(Socket::kServer).build();
+    UdpServer server(5000);
 
     vector<char> data;
     for (uint32_t index = 0; index < 2400; index++) {
       data.push_back('g');
     }
 
-    const auto sentSize = udp->write(data);
+    const auto sentSize = server.write(data, Endpoint("127.0.0.1", 5000));
     EXPECT_EQ(sentSize, data.size());
   } catch (const exception& excp) {
     cout << excp.what() << endl;
@@ -115,11 +120,10 @@ TEST(Write, Large)
   }
 }
 
-TEST(large, server_send)
+TEST(Server, LargeReceive)
 {
   const Port SERVER_PORT = 5000;
   const IP SERVER_IP = "127.0.0.1";
-  const uint32_t STATES = 3;
   const vector<uint32_t> lengths = {176, 16409, 867, 4705};
 
   try {
