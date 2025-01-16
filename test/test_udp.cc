@@ -64,8 +64,8 @@ TEST(Server, ValidCreation)
 {
   try {
     UdpServer server;
-  } catch (const exception& excp) {
-    cout << excp.what() << endl;
+  } catch (const exception& e) {
+    cout << e.what() << endl;
     FAIL();
   }
 }
@@ -79,8 +79,8 @@ TEST(Server, InvalidPort)
     FAIL();
   } catch (const UdpInterface::Exception::Port& e) {
     SUCCEED();
-  } catch (const exception& excp) {
-    cout << excp.what() << endl;
+  } catch (const exception& e) {
+    cout << e.what() << endl;
     FAIL();
   }
 }
@@ -91,10 +91,10 @@ TEST(Server, BindNotOpened)
     UdpServer server;
     server.bind(500);
     FAIL();
-  } catch (const UdpInterface::Exception::Port& e) {
+  } catch (const UdpInterface::Exception::Open& e) {
     SUCCEED();
-  } catch (const exception& excp) {
-    cout << excp.what() << endl;
+  } catch (const exception& e) {
+    cout << e.what() << endl;
     FAIL();
   }
 }
