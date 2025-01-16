@@ -5,12 +5,15 @@
 #include <future>
 #include <iterator>
 #include <vector>
+#include <chrono>
 #include <gtest/gtest.h>
 #include "socket/udp.h"
 
 
 // TODO(MN): Exceptions, creation, send small, receive small, small loop back, large loop back, dynamic size loop back, variadic content loopback.
 using namespace std;
+using namespace std::this_thread;
+using namespace std::chrono;
 
 
 template <typename T>
@@ -34,8 +37,9 @@ static vector<char> generateData(uint32_t size, char seed)
 {
   vector<char> data(size);
 
+  data[0] = seed;
   for (uint32_t index = 1; index < size; index++) {
-    data[index] = index + seed + 0x74;
+    data[index] = static_cast<char>(index + seed + 0x74);
   }
 
   return data;
@@ -43,6 +47,10 @@ static vector<char> generateData(uint32_t size, char seed)
 
 static bool verifyData(const vector<char>& data, char seed)
 {
+  if (data[0] != seed) {
+      return false;
+  }
+
   for (uint32_t index = 1; index < data.size(); index++) {
     if (data[index] != static_cast<char>(index + seed + 0x74)) {
         return false;
