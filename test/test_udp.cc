@@ -156,11 +156,18 @@ TEST(Server, LargeReceive)
 
   try {
     future<void> taskServer = async(launch::async, [SERVER_IP, lengths]() {
-        UdpServer server(SERVER_PORT);
+        UdpServer server;
         server.open();
+        server.bind(SERVER_PORT);
 
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
-          const auto [data, clientEndpoint] = server.read(lengths[testIndex]);
+
+          tuple<Data, Endpoint> result;
+          do {
+            result = server.read(lengths[testIndex]);
+          } while (std::get<0>(result).size() == 0);
+
+          const auto& [data, endpoint] = result;
           EXPECT_EQ(data.size(), lengths[testIndex]);
           EXPECT_TRUE(verifyData(data, testIndex));
         }
@@ -170,8 +177,10 @@ TEST(Server, LargeReceive)
 
     future<void> taskClient = async(launch::async, [SERVER_IP, SERVER_PORT, lengths]() {
         UdpClient client;
+        client.open();
 
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
+          sleep_for(milliseconds(1));
           vector<char> buffer = generateData(lengths[testIndex], testIndex);
           const auto sentSize = client.write(buffer, Endpoint(SERVER_IP, SERVER_PORT));
           EXPECT_EQ(sentSize, lengths[testIndex]);
