@@ -60,23 +60,38 @@ static bool verifyData(const vector<char>& data, char seed)
   return true;
 }
 
-
 TEST(Server, ValidCreation)
 {
   try {
-    UdpServer server(5000);
-  } catch (const exception& e) {
-    cout << e.what() << endl;
+    UdpServer server;
+  } catch (const exception& excp) {
+    cout << excp.what() << endl;
     FAIL();
   }
 }
 
-TEST(Server, InvalidCreation)
+TEST(Server, InvalidPort)
 {
   try {
-    UdpServer server(0);
+    UdpServer server;
+    server.open();
+    server.bind(0);
     FAIL();
-  } catch (const UdpSocket::Exception::Port& e) {
+  } catch (const UdpInterface::Exception::Port& e) {
+    SUCCEED();
+  } catch (const exception& excp) {
+    cout << excp.what() << endl;
+    FAIL();
+  }
+}
+
+TEST(Server, BindNotOpened)
+{
+  try {
+    UdpServer server;
+    server.bind(500);
+    FAIL();
+  } catch (const UdpInterface::Exception::Port& e) {
     SUCCEED();
   } catch (const exception& excp) {
     cout << excp.what() << endl;
@@ -87,7 +102,9 @@ TEST(Server, InvalidCreation)
 TEST(Server, WriteZero)
 {
   try {
-    UdpServer server(5000);
+    UdpServer server;
+    server.open();
+    server.bind(5000);
     const auto sentSize = server.write({}, Endpoint("127.0.0.1", 5000));
     EXPECT_EQ(sentSize, 0);
   } catch (const exception& excp) {
@@ -99,7 +116,9 @@ TEST(Server, WriteZero)
 TEST(Server, WriteSmall)
 {
   try {
-    UdpServer server(5000);
+    UdpServer server;
+    server.open();
+    server.bind(5000);
     const string text = "This is example";
     const vector<char> data(begin(text), end(text));
     const auto sentSize = server.write(data, Endpoint("127.0.0.1", 5000));
@@ -113,7 +132,8 @@ TEST(Server, WriteSmall)
 TEST(Server, Write)
 {
   try {
-    UdpServer server(5000);
+    UdpServer server;
+    server.bind(5000);
 
     vector<char> data;
     for (uint32_t index = 0; index < 2400; index++) {
