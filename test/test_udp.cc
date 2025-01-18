@@ -152,7 +152,7 @@ TEST(Server, LargeReceive)
 {
   const Port SERVER_PORT = 5000;
   const IP SERVER_IP = "127.0.0.1";
-  const vector<uint32_t> lengths = {176, 16409, 867, 4705};
+  const vector<uint32_t> lengths = {176, 16409, 867, 4705, 8, 98985};
 
   try {
     future<void> taskServer = async(launch::async, [SERVER_IP, lengths]() {
