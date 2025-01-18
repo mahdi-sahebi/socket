@@ -5,6 +5,30 @@
 #include <vector>
 #include <chrono>
 #include <functional>
+#include <string>
+
+
+using IP = std::string;
+using Port = uint16_t;
+using Data = std::vector<char>;
+
+struct Endpoint
+{
+  Endpoint() :
+    ip{"0.0.0.0"},
+    port{0}
+  {
+
+  }
+
+  Endpoint(IP ip, Port port){
+      this->ip = ip;
+      this->port = port;
+  }
+
+  IP ip;
+  Port port;
+};
 
 // TODO(MN): Dervie from IO interface and handle files...
 class Socket
