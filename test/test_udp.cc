@@ -133,6 +133,7 @@ TEST(Server, Write)
 {
   try {
     UdpServer server;
+    server.open();
     server.bind(5000);
 
     vector<char> data;
@@ -152,7 +153,7 @@ TEST(Server, LargeReceive)
 {
   const Port SERVER_PORT = 5000;
   const IP SERVER_IP = "127.0.0.1";
-  const vector<uint32_t> lengths = {176, 16409, 867, 4705, 8, 98985};
+  const vector<uint32_t> lengths = {176, 1865507, 867, 4705, 8, 98985};
 
   try {
     future<void> taskServer = async(launch::async, [SERVER_IP, lengths]() {
@@ -161,7 +162,6 @@ TEST(Server, LargeReceive)
         server.bind(SERVER_PORT);
 
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
-
           tuple<Data, Endpoint> result;
           do {
             result = server.read(lengths[testIndex]);
@@ -179,8 +179,9 @@ TEST(Server, LargeReceive)
         UdpClient client;
         client.open();
 
+        sleep_for(milliseconds(100));
+
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
-          sleep_for(milliseconds(1));
           vector<char> buffer = generateData(lengths[testIndex], testIndex);
           const auto sentSize = client.write(buffer, Endpoint(SERVER_IP, SERVER_PORT));
           EXPECT_EQ(sentSize, lengths[testIndex]);
