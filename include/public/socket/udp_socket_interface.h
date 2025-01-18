@@ -32,6 +32,12 @@ public:
     public:
       explicit Close(const std::string& message) : std::runtime_error(message){}
     };
+
+    class Bind : public std::runtime_error
+    {
+    public:
+      explicit Bind(const std::string& message) : std::runtime_error(message){}
+    };
   };
 };
 
