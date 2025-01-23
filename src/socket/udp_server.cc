@@ -4,6 +4,8 @@
 #include <unistd.h>
 #include <string.h>
 #include <fcntl.h>
+#include <chrono>
+#include <thread>
 #include "socket/udp_server.h"
 
 
@@ -11,6 +13,8 @@ constexpr uint32_t MAX_UDP_SIZE = 65507;
 constexpr int INVALID_SOCKET = -1;
 
 using namespace std;
+using namespace std::this_thread;
+using namespace std::chrono;
 
 
 UdpServer::UdpServer() :
@@ -82,10 +86,11 @@ void UdpServer::bind(Port port)
 
 std::tuple<Data, Endpoint> UdpServer::read(uint32_t size, uint32_t timeoutUS)
 {
-  // TODO(MN): timeoutUS. tests of timeoutUS
   // TODO(MN): Handle discrete receiving from different senders
   Endpoint senderEndpoint{};
   Data data(size);
+
+  const auto endTime{chrono::high_resolution_clock::now() + milliseconds(timeoutUS)};
 
   struct sockaddr_in clientAddress{};
   socklen_t length = sizeof(clientAddress);
@@ -93,7 +98,7 @@ std::tuple<Data, Endpoint> UdpServer::read(uint32_t size, uint32_t timeoutUS)
   uint32_t totalReceivedSize{0};
   char* itr{data.data()};
 
-  while (size) {
+  while ((chrono::high_resolution_clock::now() <= endTime) && size) {
     uint32_t segmentSize{std::min(size, MAX_UDP_SIZE)};
 
     const uint32_t receivedSize = recvfrom(socket_, itr, segmentSize,  0, (struct sockaddr*) &clientAddress, &length);
