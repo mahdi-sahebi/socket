@@ -98,9 +98,9 @@ std::tuple<Data, Endpoint> UdpServer::read(uint32_t size, uint32_t timeoutUS)
   uint32_t totalReceivedSize{0};
   char* itr{data.data()};
 
-  while ((chrono::high_resolution_clock::now() <= endTime) && size) {
+  do {
     uint32_t segmentSize{std::min(size, MAX_UDP_SIZE)};
-
+    
     const uint32_t receivedSize = recvfrom(socket_, itr, segmentSize,  0, (struct sockaddr*) &clientAddress, &length);
     if (static_cast<uint32_t>(-1) == receivedSize) {
       continue;
@@ -110,12 +110,9 @@ std::tuple<Data, Endpoint> UdpServer::read(uint32_t size, uint32_t timeoutUS)
     segmentSize = receivedSize;
     size -= segmentSize;
     itr += segmentSize;
-  }
-
-  senderEndpoint.ip.resize(INET_ADDRSTRLEN);
-  inet_ntop(AF_INET, &clientAddress.sin_addr, senderEndpoint.ip.data(), INET_ADDRSTRLEN);
-  senderEndpoint.ip = inet_ntoa(clientAddress.sin_addr);
-
+  } while ((chrono::high_resolution_clock::now() <= endTime) && size);
+  
+  senderEndpoint.ip   = inet_ntoa(clientAddress.sin_addr);
   senderEndpoint.port = ntohs(clientAddress.sin_port);
 
   if (totalReceivedSize != data.size()) {
