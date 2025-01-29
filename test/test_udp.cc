@@ -7,31 +7,16 @@
 #include <vector>
 #include <chrono>
 #include <gtest/gtest.h>
-#include "socket/udp.h"
+#include "socket/udp_client.h"
+#include "socket/udp_server.h"
 
 
 // TODO(MN): Exceptions, creation, send small, receive small, small loop back, large loop back, dynamic size loop back, variadic content loopback.
+// TODO(MN: Tests of timeout 0
 using namespace std;
 using namespace std::this_thread;
 using namespace std::chrono;
 
-
-template <typename T>
-constexpr auto maxList(const T* const list, const uint32_t size)
-{
-  if (0 == size) {
-      throw invalid_argument("Zero length array");
-  }
-
-  T max = list[0];
-  for (uint32_t index = 1; index < size; index++) {
-    if (list[index] > max) {
-      max = list[index];
-    }
-  }
-
-  return max;
-}
 
 static vector<char> generateData(uint32_t size, char seed)
 {
@@ -164,7 +149,7 @@ TEST(Server, LargeReceive)
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
           tuple<Data, Endpoint> result;
           do {
-            result = server.read(lengths[testIndex]);
+            result = server.read(lengths[testIndex], 20);
           } while (std::get<0>(result).size() == 0);
 
           const auto& [data, endpoint] = result;
@@ -182,7 +167,7 @@ TEST(Server, LargeReceive)
         sleep_for(milliseconds(100));
 
         for (uint32_t testIndex = 0; testIndex < lengths.size(); testIndex++) {
-          vector<char> buffer = generateData(lengths[testIndex], testIndex);
+          const vector<char> buffer = generateData(lengths[testIndex], testIndex);
           const auto sentSize = client.write(buffer, Endpoint(SERVER_IP, SERVER_PORT));
           EXPECT_EQ(sentSize, lengths[testIndex]);
         }
@@ -192,10 +177,11 @@ TEST(Server, LargeReceive)
 
     taskServer.get();
     taskClient.get();
-
   } catch (const exception& excp) {
     std::cout << excp.what() << std::endl;
     FAIL();
+  } catch (...) {
+    std::cout << "Unknown exception" << std::endl;
   }
 }
 
