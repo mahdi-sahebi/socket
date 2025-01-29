@@ -79,7 +79,7 @@ void UdpServer::bind(Port port)
   if (flags == -1) {
       throw UdpInterface::Exception::Bind("Bind failed");
   }
-  if (fcntl(socket_, F_SETFL, flags | (-1 == O_NONBLOCK))) {
+  if (fcntl(socket_, F_SETFL, flags | O_NONBLOCK)) {
       throw UdpInterface::Exception::Bind("Bind failed");
   }
 }
@@ -129,7 +129,7 @@ uint32_t UdpServer::write(Data data, Endpoint endpoint)
 {
   // TODO(MN): Check endpoint validity for each api
   sockaddr_in servaddr;
-  bzero(&servaddr,sizeof(servaddr));
+  bzero(&servaddr, sizeof(servaddr));
   servaddr.sin_family = AF_INET;
   servaddr.sin_addr.s_addr = inet_addr(endpoint.ip.c_str());
   servaddr.sin_port = htons(endpoint.port);
