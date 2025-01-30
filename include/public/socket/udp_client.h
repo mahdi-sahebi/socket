@@ -12,12 +12,12 @@ public:
 
   void open() override;
   void close() override;
-  bool isOpen() override;
-  uint32_t read(char* const outData, uint32_t size, uint32_t timeoutUS = 0) override;
-  uint32_t write(const char* const inData, uint32_t size) override;
+  bool isOpen() const override;
+  uint32_t read(char* const outData, uint32_t size, uint32_t timeoutUS = 0) const override;
+  uint32_t write(const char* const inData, uint32_t size) const override;
 
-  std::tuple<Data, Endpoint> read(uint32_t size, uint32_t timeoutUS = 0) override;
-  uint32_t write(Data data, Endpoint endpoint) override;
+  std::tuple<Data, Endpoint> read(uint32_t size, uint32_t timeoutUS = 0) const override;
+  uint32_t write(Data data, Endpoint endpoint) const override;
 
 private:
   int socket_;

@@ -57,7 +57,7 @@ void UdpServer::close()
   socket_ = INVALID_SOCKET;
 }
 
-bool UdpServer::isOpen()
+bool UdpServer::isOpen() const 
 {
   return (INVALID_SOCKET != socket_);
 }
@@ -90,7 +90,7 @@ void UdpServer::bind(Port port)
   }
 }
 
-uint32_t UdpServer::read(char* const outData, uint32_t size, uint32_t timeoutUS)
+uint32_t UdpServer::read(char* const outData, uint32_t size, uint32_t timeoutUS) const 
 {
   const auto endTime{chrono::high_resolution_clock::now() + microseconds(timeoutUS)};
 
@@ -114,7 +114,7 @@ uint32_t UdpServer::read(char* const outData, uint32_t size, uint32_t timeoutUS)
   return totalReceivedSize;
 }
 
-std::tuple<Data, Endpoint> UdpServer::read(uint32_t size, uint32_t timeoutUS)
+std::tuple<Data, Endpoint> UdpServer::read(uint32_t size, uint32_t timeoutUS) const 
 {
   // TODO(MN): Handle discrete receiving from different senders
   Endpoint senderEndpoint{};
@@ -152,7 +152,7 @@ std::tuple<Data, Endpoint> UdpServer::read(uint32_t size, uint32_t timeoutUS)
   return {data, senderEndpoint};
 }
 
-uint32_t UdpServer::write(Data data, Endpoint endpoint)
+uint32_t UdpServer::write(Data data, Endpoint endpoint) const 
 {
   // TODO(MN): Check endpoint validity for each api
   sockaddr_in servaddr;
@@ -179,7 +179,7 @@ uint32_t UdpServer::write(Data data, Endpoint endpoint)
   return data.size();
 }
 
-uint32_t UdpServer::write(const char* const inData, uint32_t size)
+uint32_t UdpServer::write(const char* const inData, uint32_t size) const 
 {
   // TODO(MN): Check endpoint validity for each api
   sockaddr_in servaddr;
