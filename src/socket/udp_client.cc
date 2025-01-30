@@ -9,7 +9,7 @@
 #include "socket/udp_client.h"
 
 
-constexpr uint32_t MAX_UDP_SIZE = 65507;
+constexpr uint32_t MAX_UDP_SIZE = 1460;
 constexpr int INVALID_SOCKET = -1;// TODO(MN): Move into the common private header
 
 using namespace std;
@@ -19,6 +19,12 @@ using namespace std::chrono;
 
 UdpClient::UdpClient() :
   socket_{INVALID_SOCKET}
+{
+}
+
+UdpClient::UdpClient(Endpoint sendingEndpoint) :
+  socket_{INVALID_SOCKET},
+  sendingEndpoint_{sendingEndpoint}
 {
 }
 
@@ -64,13 +70,40 @@ bool UdpClient::isOpen()
   return (INVALID_SOCKET != socket_);
 }
 
+uint32_t UdpClient::read(char* const outData, uint32_t size, uint32_t timeoutUS)
+{
+  const auto endTime{chrono::high_resolution_clock::now() + microseconds(timeoutUS)};
+
+  struct sockaddr_in clientAddress{};
+  socklen_t length = sizeof(clientAddress);
+
+  uint32_t totalReceivedSize{0};
+  char* itr{outData};
+
+  do {
+    uint32_t segmentSize{std::min(size, MAX_UDP_SIZE)};
+    
+    const uint32_t receivedSize = recvfrom(socket_, itr, segmentSize,  0, (struct sockaddr*)&clientAddress, &length);
+    if (static_cast<uint32_t>(-1) == receivedSize) {
+      continue;
+    }
+
+    totalReceivedSize += receivedSize;
+    segmentSize = receivedSize;
+    size -= segmentSize;
+    itr += segmentSize;
+  } while ((chrono::high_resolution_clock::now() <= endTime) && size);
+  
+  return totalReceivedSize;
+}
+
 std::tuple<Data, Endpoint> UdpClient::read(uint32_t size, uint32_t timeoutUS)
 {
   // TODO(MN): Handle discrete receiving from different senders
   Endpoint senderEndpoint{};
   Data data(size);
 
-  const auto endTime{chrono::high_resolution_clock::now() + milliseconds(timeoutUS)};
+  const auto endTime{chrono::high_resolution_clock::now() + microseconds(timeoutUS)};
 
   struct sockaddr_in clientAddress{};
   socklen_t length = sizeof(clientAddress);
@@ -100,6 +133,34 @@ std::tuple<Data, Endpoint> UdpClient::read(uint32_t size, uint32_t timeoutUS)
   }
 
   return {data, senderEndpoint};
+}
+
+uint32_t UdpClient::write(const char* const inData, uint32_t size)
+{
+  // TODO(MN): Check endpoint validity for each api
+  sockaddr_in servaddr;
+  bzero(&servaddr, sizeof(servaddr));
+  servaddr.sin_family = AF_INET;
+  servaddr.sin_addr.s_addr = inet_addr(sendingEndpoint_.ip.c_str());
+  servaddr.sin_port = htons(sendingEndpoint_.port);
+
+  const char* itr = inData;
+  uint32_t totalSent = 0;
+
+  while (size) {
+    const uint32_t segmentSize = std::min(size, MAX_UDP_SIZE);
+
+    auto sentSize = sendto(socket_, itr, segmentSize, MSG_CONFIRM, (const struct sockaddr*)&servaddr, sizeof(servaddr));
+    if (-1 == sentSize) {
+        sentSize = 0;
+    }
+
+    size -= sentSize;
+    itr += sentSize;
+    totalSent += sentSize;
+  }
+
+  return totalSent;
 }
 
 uint32_t UdpClient::write(Data data, Endpoint endpoint)

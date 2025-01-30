@@ -35,6 +35,8 @@ public:
   virtual void open() = 0;
   virtual void close() = 0;
   virtual bool isOpen() = 0;
+  virtual uint32_t read(char* const outData, uint32_t size, uint32_t timeoutUS = 0) = 0;
+  virtual uint32_t write(const char* const inData, uint32_t size) = 0;
 };
 
 
