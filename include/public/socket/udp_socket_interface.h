@@ -9,8 +9,8 @@
 class UdpInterface: SocketInterface
 {
 public:
-  virtual std::tuple<Data, Endpoint> read(uint32_t size, uint32_t timeoutUS = 0) = 0;
-  virtual uint32_t write(Data data, Endpoint endpoint) = 0;
+  virtual std::tuple<Data, Endpoint> read(uint32_t size, uint32_t timeoutUS = 0) const = 0;
+  virtual uint32_t write(Data data, Endpoint endpoint) const = 0;
 
   class Exception
   {
