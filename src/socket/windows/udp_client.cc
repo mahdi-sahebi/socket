@@ -4,6 +4,7 @@
 #include <chrono>
 #include <thread>
 #include <winsock2.h>
+#include "win_sock.h"
 #include "socket/udp_client.h"
 
 
@@ -17,6 +18,7 @@ using namespace std::chrono;
 UdpClient::UdpClient() :
   socket_{INVALID_SOCKET}
 {
+  WinSockManager::getInstance();
 }
 
 UdpClient::UdpClient(Endpoint sendingEndpoint) :

@@ -4,50 +4,11 @@
 #include <chrono>
 #include <thread>
 #include <winsock2.h>
+#include "win_sock.h"
 #include "socket/udp_server.h"
 
 
-///////////////////////////////////////
-#include <memory>
-
-class WinSockManager
-{
-public:
-  static std::shared_ptr<WinSockManager> getInstance()
-  {
-    if (nullptr == instance_) {
-      instance_ = std::shared_ptr<WinSockManager>(new WinSockManager());
-    }
-
-    return instance_;
-  }
-
-  ~WinSockManager()
-  {
-    WSACleanup();
-  }
-
-private:
-  static std::shared_ptr<WinSockManager> instance_;
-
-  WinSockManager()
-  {
-    WSADATA wsaData;
-    
-    if (NO_ERROR != WSAStartup(MAKEWORD(2, 2), &wsaData)) {
-        throw std::runtime_error("WSAStartup failed with error");
-    }
-  }
-
-};
-
-std::shared_ptr<WinSockManager> WinSockManager::instance_ = nullptr;
-///////////////////////////////////////
-
-
-
 constexpr uint32_t MAX_UDP_SIZE = 1460;
-// constexpr int INVALID_SOCKET = -1;
 
 using namespace std;
 using namespace std::this_thread;
@@ -57,7 +18,7 @@ using namespace std::chrono;
 UdpServer::UdpServer() :
   socket_{INVALID_SOCKET}
 {
-  // WinSockManager::getInstance();
+  WinSockManager::getInstance();
 }
 
 UdpServer::UdpServer(Endpoint sendingEndpoint) :
