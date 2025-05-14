@@ -89,8 +89,8 @@ TEST(Server, WriteZero)
   try {
     UdpServer server;
     server.open();
-    server.bind(5000);
-    const auto sentSize = server.write({}, Endpoint("127.0.0.1", 5000));
+    server.bind(5501);
+    const auto sentSize = server.write({}, Endpoint("127.0.0.1", 5501));
     EXPECT_EQ(sentSize, 0);
   } catch (const exception& excp) {
     cout << excp.what() << endl;
@@ -103,10 +103,10 @@ TEST(Server, WriteSmall)
   try {
     UdpServer server;
     server.open();
-    server.bind(5000);
+    server.bind(5501);
     const string text = "This is example";
     const vector<char> data(begin(text), end(text));
-    const auto sentSize = server.write(data, Endpoint("127.0.0.1", 5000));
+    const auto sentSize = server.write(data, Endpoint("127.0.0.1", 5501));
     EXPECT_EQ(sentSize, text.size());
   } catch (const exception& excp) {
     cout << excp.what() << endl;
@@ -119,14 +119,14 @@ TEST(Server, Write)
   try {
     UdpServer server;
     server.open();
-    server.bind(5000);
+    server.bind(5501);
 
     vector<char> data;
     for (uint32_t index = 0; index < 2400; index++) {
       data.push_back('g');
     }
 
-    const auto sentSize = server.write(data, Endpoint("127.0.0.1", 5000));
+    const auto sentSize = server.write(data, Endpoint("127.0.0.1", 5501));
     EXPECT_EQ(sentSize, data.size());
   } catch (const exception& excp) {
     cout << excp.what() << endl;
@@ -136,7 +136,7 @@ TEST(Server, Write)
 
 TEST(Server, LargeReceive1)
 {
-  const Port SERVER_PORT = 5000;
+  const Port SERVER_PORT = 5501;
   const IP SERVER_IP = "127.0.0.1";
   const vector<uint32_t> lengths = {176, 1865507, 867, 4705, 8, 98985};
 
@@ -187,7 +187,7 @@ TEST(Server, LargeReceive1)
 
 TEST(Server, LargeReceive2)
 {
-  const Port SERVER_PORT = 5000;
+  const Port SERVER_PORT = 5501;
   const IP SERVER_IP = "127.0.0.1";
   const vector<uint32_t> lengths = {176, 865507, 867, 4705, 8, 98985};
 
