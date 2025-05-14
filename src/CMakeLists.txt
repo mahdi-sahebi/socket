@@ -1,4 +1,10 @@
 # Variables
+set(ARCH "UNKNOWN_PLATFORM")
+if (UNIX)
+    set(ARCH unix)
+elseif (WIN32)
+    set(ARCH windows)
+endif()
 set(PRIVATE_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/private/)
 set(PUBLIC_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/public/)
 set(HEADERS
@@ -7,7 +13,7 @@ set(HEADERS
     ${PUBLIC_INCLUDE_DIRS}/socket/udp_server.h
     ${PUBLIC_INCLUDE_DIRS}/socket/udp_client.h
 )
-set(SOURCES socket/udp_server.cc socket/udp_client.cc)
+set(SOURCES socket/${ARCH}/udp_server.cc socket/${ARCH}/udp_client.cc)
 set(LIB ${PROJECT_NAME})
 
 
