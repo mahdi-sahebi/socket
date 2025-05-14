@@ -52,7 +52,7 @@ void UdpServer::close()
       throw UdpInterface::Exception::Close("Socket is not opened");
   }
 
-  ::close(socket_);
+  ::closesocket(socket_);
   socket_ = INVALID_SOCKET;
 }
 
@@ -73,8 +73,8 @@ void UdpServer::bind(Port port)
 
   struct sockaddr_in servaddr{};
   servaddr.sin_family = AF_INET;
-  servaddr.sin_addr.s_addr = INADDR_ANY;
   servaddr.sin_port = htons(port);
+  servaddr.sin_addr.s_addr = htonl(INADDR_ANY);
  
   if (::bind(socket_, (const struct sockaddr *)&servaddr,  sizeof(servaddr))) {
       throw UdpInterface::Exception::Bind("Bind failed");

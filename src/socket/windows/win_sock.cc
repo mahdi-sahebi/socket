@@ -1,5 +1,4 @@
 #include <stdexcept>
-#include <winsock2.h>
 #include "win_sock.h"
 
 
@@ -21,9 +20,7 @@ WinSockManager::~WinSockManager()
 
 WinSockManager::WinSockManager()
 {
-    WSADATA wsaData;
-
-    if (NO_ERROR != WSAStartup(MAKEWORD(2, 2), &wsaData)) {
+    if (WSAStartup(MAKEWORD(2, 2), &wsaData_)) {
         throw std::runtime_error("WSAStartup failed with error");
     }
 }
