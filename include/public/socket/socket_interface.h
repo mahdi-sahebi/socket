@@ -4,11 +4,13 @@
 #include <cstdint>
 #include <vector>
 #include <string>
+#include <cstdlib>
 
 
 using IP = std::string;
 using Port = uint16_t;
 using Data = std::vector<char>;
+using Socket = uintptr_t;
 
 struct Endpoint
 {

@@ -20,7 +20,7 @@ public:
   uint32_t write(Data data, Endpoint endpoint) const override;
 
 private:
-  int socket_;
+  Socket socket_;
   Endpoint sendingEndpoint_;
 
 };

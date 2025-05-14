@@ -1,9 +1,11 @@
 # Variables
 set(ARCH "UNKNOWN_PLATFORM")
+set(DEPS "")
 if (UNIX)
     set(ARCH unix)
 elseif (WIN32)
     set(ARCH windows)
+    set(DEPS Ws2_32)
 endif()
 set(PRIVATE_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/private/)
 set(PUBLIC_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include/public/)
@@ -29,3 +31,6 @@ target_include_directories(${LIB}
 
 
 # Linking
+target_link_libraries(${LIB}
+    PRIVATE ${DEPS}
+)
