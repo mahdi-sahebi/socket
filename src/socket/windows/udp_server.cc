@@ -25,6 +25,7 @@ UdpServer::UdpServer(Endpoint sendingEndpoint) :
   socket_{INVALID_SOCKET},
   sendingEndpoint_{sendingEndpoint}
 {
+  WinSockManager::getInstance();
 }
 
 UdpServer::~UdpServer()

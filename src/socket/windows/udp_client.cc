@@ -25,6 +25,7 @@ UdpClient::UdpClient(Endpoint sendingEndpoint) :
   socket_{INVALID_SOCKET},
   sendingEndpoint_{sendingEndpoint}
 {
+  WinSockManager::getInstance();
 }
 
 UdpClient::~UdpClient()
@@ -44,17 +45,17 @@ void UdpClient::open()
   if (INVALID_SOCKET == socket_) {
       throw UdpInterface::Exception::Open("Create socket failed");
   }
+
+  int bufferSize = 8 * 1024 * 1024;
+  if (SOCKET_ERROR == setsockopt(socket_, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize))) {
+      throw UdpInterface::Exception::Open("Set receive buffer size failed");
+  }
 }
 
 void UdpClient::close()
 {
   if (INVALID_SOCKET == socket_) {
       throw UdpInterface::Exception::Close("Socket is not opened");
-  }
-
-  int bufferSize = 8 * 1024 * 1024;
-  if (SOCKET_ERROR == setsockopt(socket_, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize))) {
-      throw UdpInterface::Exception::Open("Set receive buffer size failed");
   }
 
   ::close(socket_);
