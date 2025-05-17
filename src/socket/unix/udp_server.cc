@@ -10,7 +10,7 @@
 
 
 constexpr uint32_t MAX_UDP_SIZE = 1460;
-constexpr int INVALID_SOCKET = -1;
+constexpr uintptr_t INVALID_SOCKET = -1;
 
 using namespace std;
 using namespace std::this_thread;

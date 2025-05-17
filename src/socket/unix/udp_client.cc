@@ -10,7 +10,7 @@
 
 
 constexpr uint32_t MAX_UDP_SIZE = 1460;
-constexpr int INVALID_SOCKET = -1;// TODO(MN): Move into the common private header
+constexpr uintptr_t INVALID_SOCKET = -1;// TODO(MN): Move into the common private header
 
 using namespace std;
 using namespace std::this_thread;
