@@ -44,6 +44,11 @@ void UdpServer::open()
   if (INVALID_SOCKET == socket_) {
       throw UdpInterface::Exception::Open("Create socket failed");
   }
+
+  int bufferSize = 8 * 1024 * 1024;
+  if (SOCKET_ERROR == setsockopt(socket_, SOL_SOCKET, SO_RCVBUF, (char*)&bufferSize, sizeof(bufferSize))) {
+      throw UdpInterface::Exception::Open("Set receive buffer size failed");
+  }
 }
 
 void UdpServer::close()
