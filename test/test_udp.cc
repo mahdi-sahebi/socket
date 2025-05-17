@@ -233,6 +233,62 @@ TEST(Server, LargeReceive2)
   }
 }
 
+TEST(Server, H264Pseudo)
+{
+  constexpr Port SERVER_PORT = 5501;
+  const IP SERVER_IP = "127.0.0.1";
+  uint32_t FPS = 30;
+  uint32_t DURATION_SEC = 5;
+  uint32_t SAMPLE_DURATION_US = 1000000 / FPS;
+  uint32_t TOTAL_SAMPLES = FPS * DURATION_SEC;
+  const vector<uint32_t> lengths = {640 * 480 * 3, 2 * 104, 1 * 1024, 4 * 1024, 3 * 1024};
+
+  try {
+    future<void> taskServer = async(launch::async, [SERVER_IP, lengths, TOTAL_SAMPLES, SAMPLE_DURATION_US]() {
+      UdpServer server;
+      server.open();
+      server.bind(SERVER_PORT);
+
+      for (uint32_t frameIndex = 0; frameIndex < TOTAL_SAMPLES; frameIndex++) {
+        Data data(lengths[frameIndex % lengths.size()], 0);
+        const auto receivedSize = server.read(data.data(), lengths[frameIndex % lengths.size()], 200000);
+        EXPECT_EQ(receivedSize, lengths[frameIndex % lengths.size()]);
+        EXPECT_EQ(data.size(), lengths[frameIndex % lengths.size()]);
+        EXPECT_TRUE(verifyData(data, frameIndex));// TODO(MN): check endpoint
+      }
+
+      server.close();
+    });
+
+    future<void> taskClient = async(launch::async, [SERVER_IP, SERVER_PORT, lengths, TOTAL_SAMPLES, SAMPLE_DURATION_US]() {
+      UdpClient client(Endpoint(SERVER_IP, SERVER_PORT));
+      client.open();
+
+      sleep_for(milliseconds(100));
+      auto frameTime = high_resolution_clock::now();
+
+      for (uint32_t frameIndex = 0; frameIndex < TOTAL_SAMPLES; frameIndex++) {
+        const vector<char> buffer = generateData(lengths[frameIndex % lengths.size()], frameIndex);
+        const auto sentSize = client.write(buffer.data(), buffer.size());
+        EXPECT_EQ(sentSize, lengths[frameIndex % lengths.size()]);
+
+        sleep_until(frameTime + microseconds(SAMPLE_DURATION_US));
+        frameTime += microseconds(SAMPLE_DURATION_US);
+      }
+
+      client.close();
+    });
+
+    taskServer.get();
+    taskClient.get();
+  } catch (const exception& excp) {
+    std::cout << excp.what() << std::endl;
+    FAIL();
+  } catch (...) {
+    std::cout << "Unknown exception" << std::endl;
+  }
+}
+
 int main()
 {
   testing::InitGoogleTest();
