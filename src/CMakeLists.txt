@@ -8,6 +8,9 @@ set(HEADERS
     ${PUBLIC_INCLUDE_DIRS}/socket/udp_socket_interface.h
     ${PUBLIC_INCLUDE_DIRS}/socket/udp_server.h
     ${PUBLIC_INCLUDE_DIRS}/socket/udp_client.h
+    ${PUBLIC_INCLUDE_DIRS}/socket/tcp_socket_interface.h
+    ${PUBLIC_INCLUDE_DIRS}/socket/tcp_server.h
+    ${PUBLIC_INCLUDE_DIRS}/socket/tcp_client.h
 )
 set(SOURCES "")
 set(LIB ${PROJECT_NAME})
@@ -19,6 +22,8 @@ if (UNIX)
     set(SOURCES 
         socket/${ARCH}/udp_server.cc 
         socket/${ARCH}/udp_client.cc 
+        socket/${ARCH}/tcp_server.cc
+        socket/${ARCH}/tcp_client.cc
     )
 elseif (WIN32)
     set(ARCH windows)
@@ -27,6 +32,8 @@ elseif (WIN32)
         socket/${ARCH}/win_sock.cc 
         socket/${ARCH}/udp_server.cc 
         socket/${ARCH}/udp_client.cc 
+        socket/${ARCH}/tcp_server.cc
+        socket/${ARCH}/tcp_client.cc
     )
     set(DEPS Ws2_32)
 endif()

@@ -11,4 +11,6 @@ if (BUILD_TESTS)
 
     add_executable(${TEST} test_udp.cc)
     target_link_libraries(${TEST} PRIVATE ${LIB} GTest::gtest)
+    add_executable(test_tcp test_tcp.cc)
+    target_link_libraries(test_tcp PRIVATE ${LIB} GTest::gtest)
 endif()
