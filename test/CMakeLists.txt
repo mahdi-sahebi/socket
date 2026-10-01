@@ -1,5 +1,3 @@
-option(BUILD_TESTS "To add test sources" ON)
-
 if (BUILD_TESTS)
     set(LIB ${PROJECT_NAME})
     set(TEST test_server)
