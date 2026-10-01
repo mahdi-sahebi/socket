@@ -50,3 +50,9 @@ TEST(Tcp, TimeoutAndZeroLength) {
   EXPECT_EQ(client.write(nullptr, 0), 0u);
   client.close(); serverTask.get();
 }
+
+int main(int argc, char** argv)
+{
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
+}
